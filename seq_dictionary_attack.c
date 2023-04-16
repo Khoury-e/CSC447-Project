@@ -26,7 +26,7 @@ void main(int argc, char *argv[])
 		FILE *fptr, *fptw;
 
 		// encrypting and writing the encrypted passwords (of passwords.txt) into hashed_pass.txt
-		fptr = fopen("passwords.txt", "r"); // reading all passwords
+		fptr = fopen("passwords2.txt", "r"); // reading all passwords
 		fptw = fopen("hashed_pass.txt","a");
 		while(fptr != NULL)
 		{
@@ -35,9 +35,8 @@ void main(int argc, char *argv[])
 
 			fscanf(fptr, "%s", p);
 			encrypted_p = encrypt(p);
-			encrypted_p[strlen(encrypted_p)-1] = "\n";
 			fputs(encrypted_p, fptw);
-
+			fputs("\n", fptw);
 		}	
 
 		//looking for the password
