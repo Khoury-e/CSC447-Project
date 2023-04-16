@@ -1,7 +1,8 @@
 #include <stdio.h>
-#include <time.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
+#include <time.h>
 
 char* encrypt(char *real)
 {
@@ -29,10 +30,14 @@ void main(int argc, char *argv[])
 		fptw = fopen("hashed_pass.txt","a");
 		while(fptr != NULL)
 		{
-			char *p, *encrypted_p; 
+			char *p = (char*)malloc(sizeof(char)*20);
+			char *encrypted_p = (char*)malloc(sizeof(char)*20); 
+
 			fscanf(fptr, "%s", p);
 			encrypted_p = encrypt(p);
+			encrypted_p[strlen(encrypted_p)-1] = "\n";
 			fputs(encrypted_p, fptw);
+
 		}	
 
 		//looking for the password
@@ -40,17 +45,20 @@ void main(int argc, char *argv[])
 		char *my_pass = argv[1];
 		char *my_encrypted = encrypt(my_pass);
 		fptr = fopen("hashed_pass.txt","r");
-		while(1)
+		while(fptr!=NULL)
 		{
-			char *thispass;
+			char *thispass = (char*)malloc(sizeof(char)*20);
+		
 			fscanf(fptr, "%s", thispass);
 			if(my_encrypted == thispass)
 			{
 				printf("The cracked password is %s\n", thispass);
 				break;
 			}
-			if(fptr==NULL)
-				break;
+			if(fptr == NULL)
+			{
+				printf("Not Found!!\n");
+			}
 		}
 		end=clock();
 		time_exec = ((float)(end-start))/CLOCKS_PER_SEC;
