@@ -7,9 +7,10 @@
 #include <string.h>
 
 #define passwords 10000
-#define filename "passwords2.txt"
+#define filename "passwords.txt"
 #define reading "r"
 #define appending "a"
+
 
 char* encrypt(char *real)
 {
@@ -24,13 +25,13 @@ char* encrypt(char *real)
 void main()
 {
 	clock_t start, end;
-	float time;
+	double time;
 
 	FILE *pr, *pw;
 	char *buff = (char*)malloc(sizeof(char*)*10000);
 	char *buff2 = (char*)malloc(sizeof(char*)*10000);
-	//setting the number of threads to be used (in this case only 10, each threads reads a block of 100 passwords)
-	omp_set_num_threads(10);
+	
+	
 
 	start = clock();	
 
@@ -42,23 +43,18 @@ void main()
 		exit(EXIT_FAILURE);
 	}	
 
-	int i;
-	int j=1000;
+	
 
-	#pragma omp parallel private(i,j) shared(pr, pw)
+	#pragma omp parallel shared(pr, pw)
 	{
 		#pragma omp for
-		
-			for(i=0;i<=j;i++)
+			for(int i=0;i<10000;i++)
 			{
-				while(fscanf(pr, "%s", &buff[i])!=EOF){
-					char *encrypted_p = encrypt(&buff[i]);
-        			fputs(encrypted_p, pw);
-        			fputs("\n", pw);
-        			i++;
-        		}
+				fscanf(pr, "%s", &buff[i]);
+				char *encrypted_p = encrypt(&buff[i]);
+        		fputs(encrypted_p, pw);
+        		fputs("\n", pw);
         	}
-		
 	}
 
 	pr = fopen("hashed_omp.txt", reading);
@@ -66,33 +62,32 @@ void main()
 	{
 		exit(EXIT_FAILURE);
 	}
-	int k;
-	int p=1000;
+	
 	char *my_pass = "password";
 	int found = 0;
-	#pragma omp parallel private(k, p) shared(my_pass, found)
+	#pragma omp parallel shared(my_pass, found)
 	{
 		#pragma omp for 
-			for(k=0;k<=p;k++){
+			for(int k=0;k<10000;k++){
 			char *thispass = (char*)malloc(sizeof(char)*20);
 			if(strcmp(encrypt(my_pass), thispass) == 0)
 			{
 				found = 1;
-
 			}
 			
 		}
 	}
 	if(found==0)
-		{
-			printf("Not Found!!\n");
-		}
-		else{
-			printf("Found!!\n");
-		}
+	{
+		printf("Not Found!!\n");
+	}
+	else
+	{
+		printf("Found!!\n");
+	}
 
 
 	end= clock();
-	time = ((float)(end-start))/CLOCKS_PER_SEC;
+	time = ((double)(end-start))/CLOCKS_PER_SEC;
 	printf("Time of execution: %.5f\n", time);
 }
