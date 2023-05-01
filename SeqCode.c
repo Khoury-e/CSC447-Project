@@ -4,7 +4,7 @@
 #include <string.h>
 #include <time.h>
 
-char* encrypt(char *real)
+char* hash(char *real)
 {
     char *pass = (char*)malloc(sizeof(char)*strlen(real));
     for (int i = 0; i < strlen(real); i++)
@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
 
     FILE *fptr, *fptw;
 
-    // encrypting and writing the encrypted passwords (of passwords.txt) into hashed_pass.txt
     fptr = fopen(argv[1], "r"); // reading all passwords
     fptw = fopen("hashed_pass.txt","w");
     if (fptr == NULL) {
@@ -35,12 +34,12 @@ int main(int argc, char *argv[])
         return 0;
     }
     char *p = (char*)malloc(sizeof(char)*20);
-    char *encrypted_p = (char*)malloc(sizeof(char)*20); 
+    char *hashed_p = (char*)malloc(sizeof(char)*20); 
 
     while(fscanf(fptr, "%s", p) == 1)
     {
-        encrypted_p = encrypt(p);
-        fputs(encrypted_p, fptw);
+        hashed_p = hash(p);
+        fputs(hashed_p, fptw);
         fputs("\n", fptw);
     }
     fclose(fptr);
@@ -49,7 +48,7 @@ int main(int argc, char *argv[])
     //looking for the password
     start = clock();
     char *my_pass = argv[2];
-    char *my_encrypted = encrypt(my_pass);
+    char *my_hashed = hash(my_pass);
     fptr = fopen("hashed_pass.txt","r");
     if (fptr == NULL) {
         printf("Failed to open hashed passwords file.\n");
@@ -59,7 +58,7 @@ int main(int argc, char *argv[])
     int found = 0;
     while(fscanf(fptr, "%s", thispass) == 1)
     {
-        if(strcmp(my_encrypted, thispass) == 0)
+        if(strcmp(my_hashed, thispass) == 0)
         {
             printf("The cracked password is %s\n", my_pass);
             found = 1;
