@@ -1,3 +1,5 @@
+// compile using: gcc -fopenmp omp_code -o omp_code.c
+// run using: ./omp_code passwords.txt password_to_crack
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -8,7 +10,7 @@
 #define MAX_PASSWORD_LENGTH 20
 #define NUM_PASSWORDS 10000
 
-char* encrypt(const char *real)
+char* hash(const char *real)
 {
     size_t len = strlen(real);
     char *pass = malloc(len + 1);
@@ -33,7 +35,6 @@ int main(int argc, char *argv[])
 
     FILE *fptr, *fptw;
 
-    // encrypting and writing the encrypted passwords (of passwords.txt) into hashed_pass.txt
     fptr = fopen(argv[1], "r"); // reading all passwords
     fptw = fopen("hashed_pass.txt", "w");
     if (fptr == NULL || fptw == NULL) {
@@ -46,22 +47,22 @@ int main(int argc, char *argv[])
     #pragma omp parallel shared(fptr, fptw)
     {
         char p[MAX_PASSWORD_LENGTH + 1];
-        char *encrypted_p;
+        char *hashed_p;
 
         #pragma omp for schedule(dynamic)
         for (int i = 0; i < NUM_PASSWORDS; i++)
         {
             if (fscanf(fptr, "%s", p) == 1)
             {
-                encrypted_p = encrypt(p);
+                hashed_p = hash(p);
 
                 #pragma omp critical
                 {
-                    fputs(encrypted_p, fptw);
+                    fputs(hashed_p, fptw);
                     fputs("\n", fptw);
                 }
 
-                free(encrypted_p);
+                free(hashed_p);
             }
         }
     }
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
     start = clock();
 
     char *my_pass = argv[2];
-    char *my_encrypted = encrypt(my_pass);
+    char *my_hashed = hash(my_pass);
 
     fptr = fopen("hashed_pass.txt", "r");
     if (fptr == NULL) {
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
         {
             if (fscanf(fptr, "%s", thispass) == 1)
             {
-                if (strcmp(my_encrypted, thispass) == 0)
+                if (strcmp(my_hashed, thispass) == 0)
                 {
                     printf("The cracked password is %s\n", my_pass);
                     #pragma omp atomic write
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
     time_exec = ((float)(end - start)) / CLOCKS_PER_SEC;
     printf("Time of execution: %.5f\n", time_exec);
 
-    free(my_encrypted);
+    free(my_hashed);
 
     return 0;
 }
