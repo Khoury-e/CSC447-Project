@@ -1,3 +1,4 @@
+// include %%cu in case running this code on Google Colab
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -7,7 +8,7 @@
 
 
 #define BLOCK_SIZE 256
-__global__ void encrypt_kernel(char *dev_pass, int length)
+__global__ void hash_kernel(char *dev_pass, int length)
 {
     __shared__ char s_pass[BLOCK_SIZE];
     int i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -26,7 +27,7 @@ __global__ void encrypt_kernel(char *dev_pass, int length)
     }
 }
 
-char* encrypt(char *real)
+char* hash(char *real)
 {
     int length = strlen(real);
     char *dev_real, *dev_pass;
@@ -39,7 +40,7 @@ char* encrypt(char *real)
 
     int block_size = 256;
     int grid_size = (length + block_size - 1) / block_size;
-    encrypt_kernel<<<grid_size, block_size>>>(dev_real, length);
+    hash_kernel<<<grid_size, block_size>>>(dev_real, length);
     cudaMemcpy(pass, dev_real, sizeof(char) * length, cudaMemcpyDeviceToHost);
 
     pass[length] = '\0'; // add null terminator
@@ -56,7 +57,6 @@ int main()
 
     FILE *fptr, *fptw;
 
-    // encrypting and writing the encrypted passwords (of passwords.txt) into hashed_pass.txt
     fptr = fopen("passwords.txt", "r"); // reading all passwords
     fptw = fopen("hashed_pass.txt","a");
     if (fptr == NULL) {
@@ -64,12 +64,12 @@ int main()
         return 0;
     }
     char *p = (char*)malloc(sizeof(char)*20);
-    char *encrypted_p = (char*)malloc(sizeof(char)*20); 
+    char *hashed_p = (char*)malloc(sizeof(char)*20); 
 
     while(fscanf(fptr, "%s", p) == 1)
     {
-        encrypted_p = encrypt(p);
-        fputs(encrypted_p, fptw);
+        hashed_p = hash(p);
+        fputs(hashed_p, fptw);
         fputs("\n", fptw);
     }
     fclose(fptr);
@@ -78,7 +78,7 @@ int main()
     //looking for the password
     start = clock();
     char *my_pass = "Yaakoub";
-    char *my_encrypted = encrypt(my_pass);
+    char *my_hashed= hash(my_pass);
     fptr = fopen("hashed_pass.txt","r");
     if (fptr == NULL) {
         printf("Failed to open hashed passwords file.\n");
@@ -88,7 +88,7 @@ int main()
     int found = 0;
     while(fscanf(fptr, "%s", thispass) == 1)
     {
-        if(strcmp(my_encrypted, thispass) == 0)
+        if(strcmp(my_hashed, thispass) == 0)
         {
             printf("The cracked password is %s\n", my_pass);
             found = 1;
