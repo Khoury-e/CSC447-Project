@@ -8,8 +8,6 @@
 #define MAX_PASSWORD_LENGTH 20
 #define NUM_PASSWORDS 10000
 
-//	 gcc -fopenmp omp_code.c -o omp_code
-//  	./omp_code passwords.txt password
 char* encrypt(const char *real)
 {
     size_t len = strlen(real);
